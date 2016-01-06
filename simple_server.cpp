@@ -4,9 +4,12 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <utility>
+#include <curl/curl.h>
 
 using namespace std;
 using boost::asio::ip::tcp;
+
+const string third_tier_URL = "http://localhost:81/";
 
 pair<string,string> leftright_string (string str, string delimiter)
 {
@@ -37,14 +40,27 @@ string dispatch_request (map<string,string> request)
 	string retVal="";
 	string key = "TYPE";
 	string reqType = request[key];
-	//retVal="Request Type: " + request[key];
-	if (reqType=="HEARTBEAT")
-		retVal="beating";
-	if (reqType=="UPDATE")
-		retVal="updating";
-	if (reqType=="TEST")
-		retVal="testing";
-	
+	CURL *curl;
+	CURLcode res;
+	struct curl_slist *headers = NULL;
+
+	curl = curl_easy_init();
+	curl_easy_setopt(curl, CURLOPT_URL, third_tier_URL.c_str());
+	headers = curl_slist_append(headers, "ComesFrom: C++ Server");
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+	if (reqType=="HEARTBEAT"){
+		retVal="beating";}
+	if (reqType=="UPDATE"){
+		res=curl_easy_perform(curl);
+		retVal="updating";}
+	if (reqType=="TEST"){
+		res=curl_easy_perform(curl);
+		retVal="testing";}
+
+	cout << curl_easy_strerror(res);
+	curl_easy_cleanup(curl);
+	curl_slist_free_all(headers);
 	return retVal;
 }
 
@@ -82,8 +98,6 @@ void start_server ()
 
 int main(int argc, char* argv[])
 {
-//	string retVal = process_request("a=1|b=2|");
-//	cout << retVal;
 	start_server();
 }
 
