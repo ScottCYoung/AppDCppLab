@@ -68,9 +68,12 @@ string dispatch_request (map<string,string> request)
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
+	
+	string cHeader = request["singularityheader"];
 
-	appd_bt_handle hBT = appd_bt_begin(reqType.c_str(),NULL);
-
+	//appd_bt_handle hBT = appd_bt_begin(reqType.c_str(),NULL);
+	appd_bt_handle hBT = appd_bt_begin(reqType.c_str(), cHeader.c_str());
+	
 	curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_URL, third_tier_URL.c_str());
 	headers = curl_slist_append(headers, "ComesFrom: C++ Server");
@@ -82,6 +85,10 @@ string dispatch_request (map<string,string> request)
 		return retVal;}
 	if (reqType=="UPDATE"){
 		appd_exitcall_handle hEX = appd_exitcall_begin(hBT,third_tier);	
+		const char* cHD = appd_exitcall_get_correlation_header(hEX);
+		string tmpStr(cHD);
+		tmpStr = "singularityheader: " + tmpStr;
+		headers = curl_slist_append(headers,tmpStr.c_str());
 		res=curl_easy_perform(curl);
 		appd_exitcall_end(hEX);
 
@@ -155,6 +162,7 @@ int main(int argc, char* argv[])
     	cfg.controller.use_ssl = CONTROLLER_USE_SSL;
 	appd_sdk_init(&cfg);
 	appd_backend_declare(APPD_BACKEND_HTTP, third_tier);
+	appd_backend_set_identifying_property(third_tier,"Name",third_tier);
 	appd_backend_add(third_tier);
 	start_server();
 }
