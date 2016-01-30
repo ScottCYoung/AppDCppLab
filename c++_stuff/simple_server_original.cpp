@@ -10,6 +10,19 @@
 using namespace std;
 using boost::asio::ip::tcp;
 
+/* ----CONFIGURATION FOR THE SDK INITIALIZATION---- */
+/*
+const char APP_NAME[] = "C++SDK_Lab";
+const char TIER_NAME[] = "C++Server";
+const char NODE_NAME[] = "C++ServerNode";
+const char CONTROLLER_HOST[] = "";
+const int CONTROLLER_PORT = 8090;
+const char CONTROLLER_ACCOUNT[] = "customer1";
+const char CONTROLLER_ACCESS_KEY[] = "";
+const int CONTROLLER_USE_SSL = 0;
+const char third_tier[] = "ThirdTier"; 
+*/
+
 const string third_tier_URL = "http://localhost:8080/back_tier/back_tier";
 
 void execute_sql (string SQL)
@@ -56,7 +69,7 @@ string dispatch_request (map<string,string> request)
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
-
+	
 	curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_URL, third_tier_URL.c_str());
 	headers = curl_slist_append(headers, "ComesFrom: C++ Server");
@@ -82,6 +95,7 @@ string dispatch_request (map<string,string> request)
 	cout << curl_easy_strerror(res);
 	curl_easy_cleanup(curl);
 	curl_slist_free_all(headers);
+	
 	return retVal;
 }
 
@@ -119,6 +133,21 @@ void start_server ()
 
 int main(int argc, char* argv[])
 {
+/*	---------SDK Initialization-------
+ *
+	appd_config cfg;
+    	appd_config_init(&cfg);
+    	cfg.app_name = (char*)APP_NAME;
+    	cfg.tier_name = (char*)TIER_NAME;
+    	cfg.node_name = (char*)NODE_NAME;
+    	cfg.controller.host = (char*)CONTROLLER_HOST;
+    	cfg.controller.port = CONTROLLER_PORT;
+    	cfg.controller.account = (char*)CONTROLLER_ACCOUNT;
+    	cfg.controller.access_key = (char*)CONTROLLER_ACCESS_KEY;
+    	cfg.controller.use_ssl = CONTROLLER_USE_SSL;
+	appd_sdk_init(&cfg);
+*
+*/
 	start_server();
 }
 

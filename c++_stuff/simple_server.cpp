@@ -6,21 +6,22 @@
 #include <utility>
 #include <curl/curl.h>
 #include <unistd.h>
-#include "/opt/appd-sdk/appdynamics-sdk-native/appdynamics-sdk-native/sdk_lib/appdynamics.h"
 
 using namespace std;
 using boost::asio::ip::tcp;
 
 /* ----CONFIGURATION FOR THE SDK INITIALIZATION---- */
-const char APP_NAME[] = "SDK-Lab";
+/*
+const char APP_NAME[] = "C++SDK_Lab";
 const char TIER_NAME[] = "C++Server";
 const char NODE_NAME[] = "C++ServerNode";
-const char CONTROLLER_HOST[] = "centos7.lan";
+const char CONTROLLER_HOST[] = "";
 const int CONTROLLER_PORT = 8090;
 const char CONTROLLER_ACCOUNT[] = "customer1";
-const char CONTROLLER_ACCESS_KEY[] = "340d5855-fe42-4484-a60f-c174004dfb69";
+const char CONTROLLER_ACCESS_KEY[] = "";
 const int CONTROLLER_USE_SSL = 0;
 const char third_tier[] = "ThirdTier"; 
+*/
 
 const string third_tier_URL = "http://localhost:8080/back_tier/back_tier";
 
@@ -69,11 +70,6 @@ string dispatch_request (map<string,string> request)
 	CURLcode res;
 	struct curl_slist *headers = NULL;
 	
-	string cHeader = request["singularityheader"];
-
-	//appd_bt_handle hBT = appd_bt_begin(reqType.c_str(),NULL);
-	appd_bt_handle hBT = appd_bt_begin(reqType.c_str(), cHeader.c_str());
-	
 	curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_URL, third_tier_URL.c_str());
 	headers = curl_slist_append(headers, "ComesFrom: C++ Server");
@@ -84,14 +80,7 @@ string dispatch_request (map<string,string> request)
 		usleep(100000);
 		return retVal;}
 	if (reqType=="UPDATE"){
-		appd_exitcall_handle hEX = appd_exitcall_begin(hBT,third_tier);	
-		const char* cHD = appd_exitcall_get_correlation_header(hEX);
-		string tmpStr(cHD);
-		tmpStr = "singularityheader: " + tmpStr;
-		headers = curl_slist_append(headers,tmpStr.c_str());
 		res=curl_easy_perform(curl);
-		appd_exitcall_end(hEX);
-
 		execute_sql("Update this_n_that_table where dude=0");
 		retVal="updating";}
 	if (reqType=="TEST"){
@@ -103,22 +92,16 @@ string dispatch_request (map<string,string> request)
 		retVal.append (curl_easy_strerror(res));
 	}
 
-	appd_bt_add_user_data(hBT,"Return Value",retVal.c_str());
-
 	cout << curl_easy_strerror(res);
 	curl_easy_cleanup(curl);
 	curl_slist_free_all(headers);
 	
-	appd_bt_end(hBT);
-
 	return retVal;
 }
 
 string process_request (string request)
 {
-	//appd_bt_handle hBT = appd_bt_begin("ProcessRequest",NULL);
 	map<string,string> parsed = parse_request(request);
-	//appd_bt_end(hBT);
 	return dispatch_request(parsed);
 }
 
@@ -150,6 +133,8 @@ void start_server ()
 
 int main(int argc, char* argv[])
 {
+/*	---------SDK Initialization-------
+ *
 	appd_config cfg;
     	appd_config_init(&cfg);
     	cfg.app_name = (char*)APP_NAME;
@@ -161,9 +146,8 @@ int main(int argc, char* argv[])
     	cfg.controller.access_key = (char*)CONTROLLER_ACCESS_KEY;
     	cfg.controller.use_ssl = CONTROLLER_USE_SSL;
 	appd_sdk_init(&cfg);
-	appd_backend_declare(APPD_BACKEND_HTTP, third_tier);
-	appd_backend_set_identifying_property(third_tier,"Name",third_tier);
-	appd_backend_add(third_tier);
+*
+*/
 	start_server();
 }
 
